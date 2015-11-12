@@ -5,11 +5,13 @@ rtt_ati::FTSensor::FTSensor(std::string const& name) : TaskContext(name){
     ip_ = "";
     frame_ = rtt_ati::default_frame;
     read_mode_ = RD_MODE_USER_PERIOD;
+    sample_count_ = rtt_ati::default_sample_count;
 
     this->addProperty("ip",ip_).doc("(xxx.xxx.xxx.xxx) The IP address for the ATI NET F/T box (default : "+ati::default_ip+" )");
     this->addProperty("read_mode",read_mode_).doc("(int) 0: user period, 1: chg netFT to user period, 2: chg user period to netFT, 3: event based (default : 0)");
     this->addProperty("frame",frame_).doc("(string) The name of the frame for the wrenchStamped msg (default : "+rtt_ati::default_frame+" )");
     this->addProperty("calibration_index", calibration_index_).doc("(uint) The calibration index to use (default: current)");
+    this->addProperty("sample_count", sample_count_).doc("(int) number of samples, also determines the streaming mode (default: -1)");
 
     this->ports()->addPort("WrenchStamped",this->port_WrenchStamped);
     port_WrenchStamped.createStream(rtt_roscomm::topic(this->getName()+"/wrench"));
@@ -71,10 +73,13 @@ bool rtt_ati::FTSensor::configureHook(){
         RTT::log(RTT::Warning)<<"ROSParam unavailable and no IP specified, using default ip : " << ati::default_ip<<RTT::endlog();
     }
 
-
     this->port_WrenchStamped.setDataSample(this->wrenchStamped);
-    configured = ft_sensor_->init(ip_,calibration_index_,ati::command_s::REALTIME);
-    
+
+    if(sample_count_ > 1)
+        configured = ft_sensor_->init(ip_,calibration_index_,ati::command_s::BUFFERED, sample_count_);
+    else
+        configured = ft_sensor_->init(ip_,calibration_index_,ati::command_s::REALTIME, sample_count_);
+
     double current_period = this->getActivity()->getPeriod();
     double current_rate = 0;
     if (current_period > 0)
@@ -149,7 +154,6 @@ bool rtt_ati::FTSensor::configureHook(){
       " Hz and should not cause any lag in the data" <<RTT::endlog();
       }
     }
-    
     this->wrenchStamped.header.frame_id = frame_;
     return configured;
 }

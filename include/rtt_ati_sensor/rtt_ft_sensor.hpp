@@ -31,6 +31,7 @@ namespace rtt_ati{
   *
   */
 static const std::string default_frame = "/ati_ft_link";
+static const int default_sample_count = -1;
 /**
  * @brief This class is a simple RTT wrapper around ati::FTSensor class from libati_sensor.
  *
@@ -135,6 +136,14 @@ protected:
      *
      */
     std::string frame_;
+    /**
+     * @brief The number of samples determines the streaming mode:
+     * -1: use default values
+     * 0: continuous streaming at netft speed
+     * 1: continuous 1 sample query, at user request rate
+     * 2 or more: buffered mode, at user request rate
+     */
+    int sample_count_;
     RTT::os::Mutex lock_;
     bool set_bias_;
 };
