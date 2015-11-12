@@ -16,6 +16,11 @@
 #include <std_srvs/Empty.h>
 #include <rtt_roscomm/rosservice.h>
 
+#define  RD_MODE_USER_PERIOD  0
+#define  RD_MODE_NETFT2USER   1
+#define  RD_MODE_USER2NETFT   2
+#define  RD_MODE_EVENTBASED   3
+
 /**
  * @brief Namespace containing all rtt related elements. Same as ati namespace for libati_sensor
  *
@@ -78,6 +83,14 @@ protected:
      *
      */
     std::string ip_;
+    /**
+     * @brief The read mode of the component
+     * 0: user read rate, do not change anything, warn if inadequate (default)
+     * 1: change netFT RDT Output rate to 1 Hz to query at user read rate with no lag
+     * 2: change user read rate to be higher than netFT to avoid lag
+     * 3: event based, change periodicity to 0 and self-trigger communication internally (requires infinite sample_count)
+     */
+    int read_mode_;
     /**
      * @brief The Orocos output port "wrench"
      *

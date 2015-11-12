@@ -4,8 +4,10 @@ rtt_ati::FTSensor::FTSensor(std::string const& name) : TaskContext(name){
     calibration_index_ = ati::current_calibration;
     ip_ = "";
     frame_ = rtt_ati::default_frame;
+    read_mode_ = RD_MODE_USER_PERIOD;
 
     this->addProperty("ip",ip_).doc("(xxx.xxx.xxx.xxx) The IP address for the ATI NET F/T box (default : "+ati::default_ip+" )");
+    this->addProperty("read_mode",read_mode_).doc("(int) 0: user period, 1: chg netFT to user period, 2: chg user period to netFT, 3: event based (default : 0)");
     this->addProperty("frame",frame_).doc("(string) The name of the frame for the wrenchStamped msg (default : "+rtt_ati::default_frame+" )");
     this->addProperty("calibration_index", calibration_index_).doc("(uint) The calibration index to use (default: current)");
 
@@ -77,12 +79,75 @@ bool rtt_ati::FTSensor::configureHook(){
     double current_rate = 0;
     if (current_period > 0)
         current_rate = 1 / current_period;
+        
     int rdt_rate = ft_sensor_->getRDTRate();
+    
+    // adapt period setting as requested
+    switch (read_mode_)
+    {
+      case RD_MODE_EVENTBASED:
+        if (current_period != 0.0)
+        {
+          RTT::log(RTT::Warning)<<"Event-based reading mode requested, but component has a non zero periodicity, forcing zero periodicity" <<RTT::endlog();
+          current_period = 0.0;
+          this->getActivity()->setPeriod(current_period);
+        }
+        break;
+        
+      case RD_MODE_NETFT2USER:
+        if (rdt_rate != 1)
+        {
+          RTT::log(RTT::Warning)<<"Changing netft RDT output rate to 1 Hz and using user periodicity" <<RTT::endlog();
+          if (ft_sensor_->setRDTOutputRate(1))
+          {
+            rdt_rate = 1;
+          }
+          else
+          {
+            RTT::log(RTT::Warning)<<"Could not set RDT output rate. Periodicity might be inadequate" <<RTT::endlog();
+          }
+        }
+        break;
+      
+      case RD_MODE_USER2NETFT:
+        if (current_rate <= rdt_rate)
+        {
+          int new_rate = rdt_rate + 1;
+          double new_period = 1.0 / new_rate;
+          RTT::log(RTT::Warning)<<"Setting component periodicity to " << new_period << " to be slightly higher than RDT output rate" <<RTT::endlog();
+          this->getActivity()->setPeriod(new_period);
+          current_period = new_period;
+        }
+        else
+        {
+          RTT::log(RTT::Warning)<<"Periodicity already correct to read at RDT output rate. Not changing user periodicity" <<RTT::endlog();
+        }
+        break;
+        
+      case RD_MODE_USER_PERIOD:
+      default:
+        break;
+    }
+    
+    // check period setting
+    if (current_period > 0)
+        current_rate = 1 / current_period;
+    else
+        current_rate = 7001; //one higher than maximum rdt_rate as we are event based
     
     if (current_rate <= rdt_rate)
     {
       RTT::log(RTT::Warning)<<"Current component activity "<< current_rate << " Hz is lower than RDT output rate "<< rdt_rate << \
       " Hz and will cause lag in the data. Consider changing the component or the netft box settings" <<RTT::endlog();
+    }
+    else
+    {
+      if (rdt_rate != 1 && current_rate != 7001)
+      {
+        // tell user everything is ok after driver warn message
+        RTT::log(RTT::Warning)<<"Current component activity "<< current_rate << " Hz is higher than RDT output rate "<< rdt_rate << \
+      " Hz and should not cause any lag in the data" <<RTT::endlog();
+      }
     }
     
     this->wrenchStamped.header.frame_id = frame_;
@@ -105,6 +170,8 @@ void rtt_ati::FTSensor::updateHook(){
         set_bias_ = false;
         ft_sensor_->setBias();
     }
+    if (read_mode_ == RD_MODE_EVENTBASED)
+      this->trigger();
 }
 
 ORO_CREATE_COMPONENT(rtt_ati::FTSensor)
