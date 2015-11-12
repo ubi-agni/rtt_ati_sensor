@@ -97,6 +97,12 @@ bool rtt_ati::FTSensor::configureHook(){
           current_period = 0.0;
           this->getActivity()->setPeriod(current_period);
         }
+        
+        if (sample_count_ != 0)
+        {
+          RTT::log(RTT::Warning)<<"Event-based reading mode requested, but request sample count is not infinite, readout frequency will be incorrect" <<RTT::endlog();
+        }
+
         break;
         
       case RD_MODE_NETFT2USER:
