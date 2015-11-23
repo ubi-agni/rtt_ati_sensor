@@ -60,6 +60,13 @@ install(DIRECTORY include/${PROJECT_NAME}/
   PATTERN ".svn" EXCLUDE
   )
   
+install(DIRECTORY launch 
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  )
+
+install(DIRECTORY scripts 
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  )
   
 ###################
 ## Documentation ##
