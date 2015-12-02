@@ -7,6 +7,7 @@ Simple Orocos RTT wrapper for the ati_sensor library. It uses ROS to get paramet
 * ***ip*** (string, default : 192.168.100.103) : The ip of the sensor 
 * ***calibration_index*** (integer, default : -1 [current]): The calibration file to use 
 * ***frame*** (string, default : /ati_ft_link): The output frame for rviz visualization 
+* ***gauge_bias*** (vector of ints, default: empty, format: [1, 65, 11, -50, -20, 39]): The user gauge bias value to set 
 
 ###### Services 
 * ***set_bias*** (std_msgs/Empty): Reset the software bias 
@@ -36,8 +37,10 @@ Or in a launch file :
 ```xml
 <launch>
  <arg name="ip" default="192.168.100.103"/>
+ <arg name="gauge_bias" default="[0,0,0,0,0,0]" />
   <node name="ft_sensor" pkg="rtt_ros" type="deployer" args="-s $(find rtt_ati_sensor)/scripts/ft_sensor.ops --" output="screen">
   <param name="ip" value="$(arg ip)"/>
+  <rosparam param="gauge_bias" subst_value="True" >$(arg gauge_bias)</rosparam>
 </node>
 </launch>
 ```

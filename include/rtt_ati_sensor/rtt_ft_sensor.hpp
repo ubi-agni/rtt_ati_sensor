@@ -137,6 +137,12 @@ protected:
      */
     std::string frame_;
     /**
+     * @brief The vector of gauge_bias. Empty means to not set the bias
+     *
+     */
+    std::vector<int> gauge_bias_;
+    
+    /**
      * @brief The number of samples determines the streaming mode:
      * -1: use default values
      * 0: continuous streaming at netft speed

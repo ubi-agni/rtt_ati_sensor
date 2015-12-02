@@ -6,11 +6,13 @@ rtt_ati::FTSensor::FTSensor(std::string const& name) : TaskContext(name){
     frame_ = rtt_ati::default_frame;
     read_mode_ = RD_MODE_USER_PERIOD;
     sample_count_ = rtt_ati::default_sample_count;
+    gauge_bias_.clear();
 
     this->addProperty("ip",ip_).doc("(xxx.xxx.xxx.xxx) The IP address for the ATI NET F/T box (default : "+ati::default_ip+" )");
     this->addProperty("read_mode",read_mode_).doc("(int) 0: user period, 1: event-based, 2: event-based at NetFT rate to match user periodicity, 3: user period matching NetFT rate (default : 0)");
     this->addProperty("frame",frame_).doc("(string) The name of the frame for the wrenchStamped msg (default : "+rtt_ati::default_frame+" )");
     this->addProperty("calibration_index", calibration_index_).doc("(uint) The calibration index to use (default: current)");
+    this->addProperty("gauge_bias", gauge_bias_).doc("(vector) the gauge bias to set, (default: empty vector)");
     this->addProperty("sample_count", sample_count_).doc("(int) number of samples, also determines the streaming mode (default: -1)");
 
     this->ports()->addPort("WrenchStamped",this->port_WrenchStamped);
@@ -68,6 +70,7 @@ bool rtt_ati::FTSensor::configureHook(){
             RTT::log(RTT::Info)<<"ROSparam calibration index provided,  using " << calibration_index_ <<RTT::endlog();
         }
         configured = rosparam->getParam(getName() + "/frame","frame");
+        rosparam->getParam(getName() + "/gauge_bias","gauge_bias");
     }else if(ip_.empty()){
         ip_ = ati::default_ip;
         RTT::log(RTT::Warning)<<"ROSParam unavailable and no IP specified, using default ip : " << ati::default_ip<<RTT::endlog();
@@ -163,6 +166,21 @@ bool rtt_ati::FTSensor::configureHook(){
           RTT::log(RTT::Warning) << "User triggered reading mode requested, but component periodicity is zero and unknown behaviour is to be expected" << RTT::endlog();
         }
         break;
+    }
+    
+    if(gauge_bias_.size() == 6)
+    {
+        if (!ft_sensor_->setGaugeBias(gauge_bias_))
+        {
+          RTT::log(RTT::Warning) << "Requested gauge_bias could not be set" << RTT::endlog();
+        }
+    }
+    else
+    { 
+        if(gauge_bias_.size() > 0)
+        {
+          RTT::log(RTT::Warning) << "Requested gauge_bias vector is not of size 6 but size " << gauge_bias_.size() << ", not setting" << RTT::endlog();
+        }
     }
     
     this->wrenchStamped.header.frame_id = frame_;

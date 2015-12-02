@@ -3,11 +3,13 @@
     <arg name="ip" default="192.168.100.103"/>
     <arg name="calibration_index" default="-1"/>
     <arg name="frame" default="/ati_link"/>
+    <arg name="gauge_bias" default="" />
     
     <node name="ft_sensor" pkg="rtt_ros" type="deployer" args="-s $(find rtt_ati_sensor)/scripts/ft_sensor.ops --" output="screen">
         <param name="ip" value="$(arg ip)"/>
         <param name="calibration_index" value="$(arg calibration_index)"/>
         <param name="frame" value="$(arg frame)"/>
+        <rosparam param="gauge_bias" subst_value="True" >$(arg gauge_bias)</rosparam>
     </node>
 </launch>
 
