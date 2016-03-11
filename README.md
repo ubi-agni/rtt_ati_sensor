@@ -34,6 +34,7 @@ deployer -s $(rospack find rtt_ati_sensor)/scripts/ft_sensor.ops
 ```
 
 Or in a launch file : 
+
 ```xml
 <launch>
  <arg name="ip" default="192.168.100.103"/>
@@ -49,6 +50,7 @@ Or in a launch file :
 #### Integrate the Sensor in your OPS file
 
 You'll have to set the parameters using rosparam (example using a launch file):
+
 ```xml
 <launch>
 <rosparam ns="ft_sensor" subst_value="true">
