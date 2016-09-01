@@ -20,14 +20,14 @@ find_package(catkin REQUIRED
   cmake_modules)
 
 #find_package(orocos_kdl REQUIRED)
-#find_package(Eigen REQUIRED)
+#find_package(Eigen3 REQUIRED)
 
 find_package(Boost REQUIRED)
 
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${Eigen_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
   ${orocos_kdl_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   )
