@@ -16,8 +16,7 @@ find_package(catkin REQUIRED
   rtt_roscomm
   std_msgs
   ati_sensor
-  geometry_msgs
-  cmake_modules)
+  geometry_msgs)
 
 #find_package(orocos_kdl REQUIRED)
 #find_package(Eigen3 REQUIRED)
