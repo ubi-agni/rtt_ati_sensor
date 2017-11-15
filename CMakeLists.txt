@@ -14,6 +14,8 @@ find_package(catkin REQUIRED
   COMPONENTS 
   rtt_ros 
   rtt_roscomm
+  rtt_rosparam
+  rtt_rosclock
   std_msgs
   ati_sensor
   geometry_msgs)
